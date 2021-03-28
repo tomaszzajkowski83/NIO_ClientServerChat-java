@@ -5,6 +5,7 @@
 package zad1;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class ChatClientTask implements Runnable {
     private ChatClient client;
@@ -42,5 +43,8 @@ public class ChatClientTask implements Runnable {
 
     public ChatClient getClient(){
         return client;
+    }
+
+    public void get()throws InterruptedException, ExecutionException {
     }
 }

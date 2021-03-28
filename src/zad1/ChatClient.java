@@ -36,9 +36,8 @@ public class ChatClient {
             while(!chanel.finishConnect()){
                 System.out.println("Connecting....");
             }
-            byte[] bufor = id.getBytes();
-            ByteBuffer buf = ByteBuffer.wrap(bufor);
-            chanel.write(buf);
+            send("HELLO "+id);
+
         }catch(UnknownHostException he){
             System.out.println("There is no such host. Check the host name you have given");
         }catch (IOException ie){
@@ -51,7 +50,13 @@ public class ChatClient {
     }
 
     public void send(String req){
-
+        try {
+            byte[] bufor = req.getBytes();
+            ByteBuffer buf = ByteBuffer.wrap(bufor);
+            chanel.write(buf);
+        }catch (IOException ex){
+            ex.printStackTrace();
+        }
     }
 
     public String getChatView(){
