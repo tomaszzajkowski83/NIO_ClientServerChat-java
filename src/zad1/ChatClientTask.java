@@ -5,17 +5,21 @@
 package zad1;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.*;
 
 public class ChatClientTask implements Runnable {
     private ChatClient client;
     private List<String> messages;
     private int delay;
+    private Future task;
+    ExecutorService exec;
 
     private ChatClientTask(ChatClient c, List<String> msg, int wait) {
         client = c;
         messages = msg;
         delay = wait;
+        exec = Executors.newSingleThreadExecutor();
+        task = exec.submit(this);
     }
 
     public static ChatClientTask create(ChatClient c, List<String> msg, int wait) {
@@ -46,5 +50,7 @@ public class ChatClientTask implements Runnable {
     }
 
     public void get()throws InterruptedException, ExecutionException {
+        task.get();
+        exec.shutdownNow();
     }
 }
