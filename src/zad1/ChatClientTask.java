@@ -4,6 +4,8 @@
 
 package zad1;
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -19,7 +21,10 @@ public class ChatClientTask implements Runnable {
         messages = msg;
         delay = wait;
         exec = Executors.newSingleThreadExecutor();
-        task = exec.submit(this);
+        task = exec.submit(() -> {
+            while (true) {
+            }
+        });
     }
 
     public static ChatClientTask create(ChatClient c, List<String> msg, int wait) {
@@ -42,15 +47,25 @@ public class ChatClientTask implements Runnable {
                 Thread.sleep(delay);
         } catch (InterruptedException ex) {
             System.out.println(ex);
+        } catch (IOException ie) {
+            ie.printStackTrace();
+        } finally {
+            Thread.currentThread().interrupt();
+            task.cancel(true);
         }
     }
 
-    public ChatClient getClient(){
+    public ChatClient getClient() {
         return client;
     }
 
-    public void get()throws InterruptedException, ExecutionException {
-        task.get();
+    public void get() throws InterruptedException, ExecutionException {
+        //System.out.println(Thread.currentThread().getName() + " .....czy zako nczony?");
+        while (!task.isDone()) {
+            //System.out.println("Calculating...");
+            Thread.sleep(300);
+        }
+        //System.out.println("Klient zakonczył dzialanie....");
         exec.shutdownNow();
     }
 }
