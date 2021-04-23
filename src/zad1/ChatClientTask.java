@@ -5,34 +5,31 @@
 package zad1;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
 
-public class ChatClientTask implements Runnable {
+public class ChatClientTask extends FutureTask {
     private ChatClient client;
     private List<String> messages;
     private int delay;
-    private Future task;
-    ExecutorService exec;
 
     private ChatClientTask(ChatClient c, List<String> msg, int wait) {
+        super(c.clientListener);
+        if (wait == 0) {
+            c.isStarving = true;
+        }
         client = c;
         messages = msg;
         delay = wait;
-        exec = Executors.newSingleThreadExecutor();
-        task = exec.submit(() -> {
-            while (true) {
-            }
-        });
+        task.start();
     }
 
     public static ChatClientTask create(ChatClient c, List<String> msg, int wait) {
         return new ChatClientTask(c, msg, wait);
     }
 
-    @Override
-    public void run() {
+    Thread task = new Thread(() -> {
+        Thread.currentThread().setName(client.id);
         try {
             client.login();
             if (delay != 0)
@@ -45,27 +42,20 @@ public class ChatClientTask implements Runnable {
             client.logout();
             if (delay != 0)
                 Thread.sleep(delay);
+            client.send("FIN");
         } catch (InterruptedException ex) {
             System.out.println(ex);
         } catch (IOException ie) {
             ie.printStackTrace();
         } finally {
-            Thread.currentThread().interrupt();
-            task.cancel(true);
         }
-    }
+    });
 
     public ChatClient getClient() {
         return client;
     }
 
-    public void get() throws InterruptedException, ExecutionException {
-        //System.out.println(Thread.currentThread().getName() + " .....czy zako nczony?");
-        while (!task.isDone()) {
-            //System.out.println("Calculating...");
-            Thread.sleep(300);
-        }
-        //System.out.println("Klient zakonczył dzialanie....");
-        exec.shutdownNow();
+    private boolean clientIsOpen() {
+        return client.chanel.isOpen();
     }
 }

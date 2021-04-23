@@ -1,7 +1,5 @@
 /**
- *
- *  @author Zajkowski Tomasz S18325
- *
+ * @author Zajkowski Tomasz S18325
  */
 
 package zad1;
@@ -11,70 +9,111 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.Callable;
 
 public class ChatClient {
 
     private InetSocketAddress serverAdress;
-    private SocketChannel chanel;
-    private String id;
+    public SocketChannel chanel;
+    public String id;
+    StringBuffer chatDialog;
+    public boolean running = true, isStarving = false;
 
-
-    public ChatClient(String host, int port, String id){
+    public ChatClient(String host, int port, String id) {
         serverAdress = new InetSocketAddress(host, port);
         this.id = id;
         connect();
+        chatDialog = new StringBuffer();
     }
 
-    public void login(){
-        send("HELLO "+id);
-        //send("\n");
-        /*
-        try {
-            chanel = SocketChannel.open();
-            chanel.connect(serverAdress);
-            while(!chanel.finishConnect()){
-                System.out.println("Connecting....");
+    Callable<Integer> clientListener = () -> {
+        Thread.currentThread().setName(id + " listener...");
+        while (running) {
+            if (isStarving) {
+                while (!read()) {
+                    Thread.sleep(0);
+                }
+                continue;
             }
-            //send("HELLO "+id);
-            //send("\n");
-
-        }catch(UnknownHostException he){
-            System.out.println("There is no such host. Check the host name you have given");
-        }catch (IOException ie){
-            System.out.println("Some I/O error occured during Socket creating");
+            Thread.sleep(0);
         }
-        */
+        return 1;
+    };
+
+    public void login() {
+        chatDialog.append("=== " + id + " chat view\n");
+        send("HELLO " + id);
     }
 
-    public void logout() throws IOException{
+    public void logout() throws IOException {
         send("BYE");
-        chanel.finishConnect();
     }
 
-    public void send(String req){
+    private void errorLog(Exception exe) {
+        chatDialog.append("*** " + exe.toString());
+    }
+
+    public void send(String req) {
         try {
+            req += "\n";
             byte[] bufor = req.getBytes();
-            ByteBuffer buf = ByteBuffer.wrap(bufor);
-            chanel.write(buf);
-        }catch (IOException ex){
+            ByteBuffer bufbuf = ByteBuffer.wrap(bufor);
+            while (bufbuf.hasRemaining()) {
+                chanel.write(bufbuf);
+            }
+            if (chanel.isOpen()) {
+            }
+        } catch (IOException ex) {
+            errorLog(ex);
+        }
+        if (!isStarving) {
+            while (!read()) {
+                int i = 0;
+            }
+        }
+    }
+
+    private boolean read() {
+        ByteBuffer inBuff = ByteBuffer.allocateDirect(256);
+        try {
+            while (chanel.read(inBuff) == 0) {
+                return false;
+            }
+            inBuff.flip();
+            byte[] tmp = new byte[inBuff.limit()];
+            inBuff.get(tmp);
+            String resp = new String(tmp);
+            chatDialog.append(resp);
+            if (resp.contains(id + ": logged out\n")) {
+                chanel.close();
+                running = false;
+            }
+        } catch (IOException ex) {
             ex.printStackTrace();
         }
+        return true;
     }
 
-    public String getChatView(){
-        return new String();
+    public String getChatView() {
+        return chatDialog.toString();
     }
-    private void connect(){
+
+    private void connect() {
         try {
             chanel = SocketChannel.open();
-            chanel.connect(serverAdress);
-            //while(!chanel.finishConnect()){
-                //System.out.println("Connecting....");
-            //}
-        }catch(UnknownHostException he){
-            System.out.println("There is no such host. Check the host name you have given");
-        }catch (IOException ie){
-            System.out.println("Some I/O error occured during Socket creating");
+            chanel.configureBlocking(false);
+            if (!chanel.connect(serverAdress)) {
+                while (!chanel.finishConnect()) {
+                    System.out.println("connecting...");
+                }
+            }
+            while (!chanel.finishConnect()) {
+                System.out.println("Connecting....");
+            }
+        } catch (UnknownHostException he) {
+            errorLog(he);
+        } catch (IOException ie) {
+            errorLog(ie);
         }
     }
 }
