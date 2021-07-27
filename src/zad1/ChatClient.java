@@ -1,7 +1,3 @@
-/**
- * @author Zajkowski Tomasz S18325
- */
-
 package zad1;
 
 import java.io.IOException;
@@ -9,7 +5,6 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.util.concurrent.Callable;
 
 public class ChatClient {
 
@@ -24,21 +19,20 @@ public class ChatClient {
         this.id = id;
         connect();
         chatDialog = new StringBuffer();
+        clientReader.start();
     }
 
-    Callable<Integer> clientListener = () -> {
-        Thread.currentThread().setName(id + " listener...");
-        while (running) {
-            if (isStarving) {
-                while (!read()) {
+    Thread clientReader = new Thread(() -> {
+        while(running){
+            while(!read()) {
+                try {
                     Thread.sleep(0);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-                continue;
             }
-            Thread.sleep(0);
         }
-        return 1;
-    };
+    });
 
     public void login() {
         chatDialog.append("=== " + id + " chat view\n");
@@ -61,15 +55,8 @@ public class ChatClient {
             while (bufbuf.hasRemaining()) {
                 chanel.write(bufbuf);
             }
-            if (chanel.isOpen()) {
-            }
         } catch (IOException ex) {
             errorLog(ex);
-        }
-        if (!isStarving) {
-            while (!read()) {
-                int i = 0;
-            }
         }
     }
 

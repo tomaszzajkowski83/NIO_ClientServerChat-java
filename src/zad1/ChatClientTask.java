@@ -1,61 +1,44 @@
-/**
- * @author Zajkowski Tomasz S18325
- */
-
 package zad1;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.*;
 
-public class ChatClientTask extends FutureTask {
+public class ChatClientTask extends FutureTask<String> {
     private ChatClient client;
-    private List<String> messages;
-    private int delay;
 
-    private ChatClientTask(ChatClient c, List<String> msg, int wait) {
-        super(c.clientListener);
-        if (wait == 0) {
-            c.isStarving = true;
-        }
+    private ChatClientTask(ChatClient c, Callable<String> callable) {
+        super(callable);
         client = c;
-        messages = msg;
-        delay = wait;
-        task.start();
     }
 
-    public static ChatClientTask create(ChatClient c, List<String> msg, int wait) {
-        return new ChatClientTask(c, msg, wait);
-    }
-
-    Thread task = new Thread(() -> {
-        Thread.currentThread().setName(client.id);
-        try {
-            client.login();
-            if (delay != 0)
-                Thread.sleep(delay);
-            for (String mes : messages) {
-                client.send(mes);
-                if (delay != 0)
-                    Thread.sleep(delay);
+    public static  ChatClientTask create(ChatClient c, List<String> msg, int wait) {
+        Callable<String> task = () -> {
+            Thread.currentThread().setName(c.id);
+            try {
+                c.login();
+                if (wait != 0)
+                    Thread.sleep(wait);
+                for (String mes : msg) {
+                    if(Thread.interrupted()){
+                        return c.id + " task interrupted";
+                    }
+                    c.send(mes);
+                    if (wait != 0)
+                        Thread.sleep(wait);
+                }
+                c.logout();
+                if (wait != 0)
+                    Thread.sleep(wait);
+            } catch (InterruptedException ex) {
+                return c.id + " task interrupted";
             }
-            client.logout();
-            if (delay != 0)
-                Thread.sleep(delay);
-            client.send("FIN");
-        } catch (InterruptedException ex) {
-            System.out.println(ex);
-        } catch (IOException ie) {
-            ie.printStackTrace();
-        } finally {
-        }
-    });
+            return c.id + " task completed";
+        };
+        return new ChatClientTask(c, task);
+    }
 
     public ChatClient getClient() {
         return client;
     }
 
-    private boolean clientIsOpen() {
-        return client.chanel.isOpen();
-    }
 }

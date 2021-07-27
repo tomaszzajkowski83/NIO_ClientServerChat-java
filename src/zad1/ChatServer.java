@@ -1,13 +1,8 @@
-/**
- * @author Zajkowski Tomasz S18325
- */
-
 package zad1;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
