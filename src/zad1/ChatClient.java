@@ -26,7 +26,7 @@ public class ChatClient {
         while(running){
             while(!read()) {
                 try {
-                    Thread.sleep(0);
+                    Thread.sleep(10);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
