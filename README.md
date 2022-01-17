@@ -3,4 +3,4 @@ Format pliku testowego:
 pierwszy wiersz: nazwa_hosta
 drugi wiersz: nr portu
 kolejne wiersze:
-id_klienta<TAB>parametr wait (w ms);msg1;msg2; .... ;msgN
+id_klienta; wait (w ms); msg1; msg2; .... ;msgN - "tab" jako delimeter
