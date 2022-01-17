@@ -1,4 +1,3 @@
-# TPO2-java
 Wymagany Plik user/home/ChatTest.txt
 Format pliku testowego:
 pierwszy wiersz: nazwa_hosta
